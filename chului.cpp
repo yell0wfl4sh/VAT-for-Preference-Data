@@ -69,13 +69,13 @@ vi dy{0, 1, 0, -1, 1, -1, 1, -1};
 
 vector<map<int, pii> > incoming(MAXN);
 vi best(MAXN, -1);
+vi par(MAXN, -1);
+vi ins(MAXN, -1);
 vvi kick(MAXN);
-vector<int> par(MAXN, -1);
-vector<int> ins(MAXN, -1);
 unordered_set<int> st;
 vi vis(MAXN, 0);
-int n, m;
-
+int N, n, m;
+vector< vpi > adj(MAXN);
 
 pii maxEdge(int x){
 	int mi=-1, mv = -INF;
@@ -138,15 +138,59 @@ void process(int x){
 	int y = p.F;
 	int ed = p.S;
 	best[x] = ed;
-	if(vis[y]==1){
-		solveCycle(x, y);
+    if(vis[y]==1){
+        solveCycle(x, y);
 		process(n++);
-	}else{
+	}else if(vis[y]==2){
+        par[x]=y;
+        vis[x]=2;
+        return;
+    }else{
 		par[x] = y;
 		process(y);		
 	}
+    vis[x]=2;
 }
 
+void printMST();
+
+void make_spanning_tree(){
+    unordered_set<int> st;
+    For(i, 1, N){
+        st.insert(best[i]);
+    }
+
+    // Make directed MST
+    For(i, 0, N){
+        trav(incoming[i]){
+            if(present(st, it.S.S)){
+                adj[it.F].pb({i, it.S.F});
+            }
+        }
+    }
+
+    printMST();
+}
+
+
+void ordering(){
+    int rt=0;
+
+    priority_queue<pair<int, int> > pq;
+    vi rank_node;
+    pq.push({0, rt});
+    while(sz(pq)){
+        pii p = pq.top();
+        pq.pop();
+        rank_node.pb(p.S);
+        trav(adj[p.S]){
+            pq.push({it.S, it.F});
+        }
+    }
+
+    printv(rank_node);
+
+}
 
 ////////PRINT///////
 void printGraph(){
@@ -175,19 +219,34 @@ void printKick(){
 		cout<<endl;
 	}
 }
+
+void printMST(){
+    For(i, 0, N){
+        cout<<i<<" -> ";
+        For(j, 0, sz(adj[i])){
+            cout<<adj[i][j].F<<":"<<adj[i][j].S<<" ";
+        }
+        cout<<endl;
+    }
+}
 ////////PRINT///////
+
 
 signed main(){
     fast
-    vvi A{	{ -INF, 5, 1, 1 },
-			{ -INF, -INF, 11, 4 },
-			{ -INF, 10, -INF, 5 },
-			{ -INF, 9, 8, -INF }};
+   //  vvi A{	{ -INF, 5, 1, 1 },
+			// { -INF, -INF, 11, 4 },
+			// { -INF, 10, -INF, 5 },
+			// { -INF, 9, 8, -INF }};
 
+    vvi A{  { -INF, 8, 1, 1},
+            { -INF, -INF, 5, 3},
+            { -INF, 8, -INF, 2},50
+            { -INF, 4, 7, -INF}};
 
 
     n = sz(A);
-    int N = n;
+    N = n;
     m=0;
     For(i, 0, n){
 	    For(j, 0, n){
@@ -199,7 +258,10 @@ signed main(){
    		ins[i]=i;
    	}
 
-	process(1);
+   	For(i, 1, N){
+   		if(!vis[i])
+   			process(i);
+   	}
     printGraph();
     printBest();
     printKick();
@@ -215,7 +277,7 @@ signed main(){
     // }
     // cout<<endl;
 
-    rFor(i, n, 0){
+    rFor(i, n-1, 1){
     	trav(kick[best[i]]){
     		For(j, 0, n){
     			if(best[j]==it){
@@ -226,6 +288,12 @@ signed main(){
     }
 
     printBest();
+
+    make_spanning_tree();
+
+    cout<<endl<<endl;
+    ordering();
+
 
     // end_routine()
     return 0;
