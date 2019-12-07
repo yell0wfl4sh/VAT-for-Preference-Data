@@ -1,0 +1,25 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1564546275015.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "3240030840",
+    "id" : "A89D87D5",
+    "lastKnownWriteTime" : 1564546087,
+    "last_content_update" : 1564546087,
+    "path" : "~/Documents/Clusivat/clusivat code/VAT_exp_with_random_data.m",
+    "project_path" : "VAT_exp_with_random_data.m",
+    "properties" : {
+        "cursorPosition" : "16,0",
+        "scrollLine" : "1"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "matlab"
+}

@@ -74,8 +74,21 @@ vi ins(MAXN, -1);
 vvi kick(MAXN);
 unordered_set<int> st;
 vi vis(MAXN, 0);
-int N, n, m;
+int N, n, m, tcnt;
 vector< vpi > adj(MAXN);
+
+/*
+vector<set<int>> vset(10000);
+void familypriority(int i,set<int> s){
+    vset[i] = s;
+    s.insert(i);
+    for(auto j : adj[i]){
+        familypriority(j,s);
+    }
+    return ;
+}
+*/
+
 
 pii maxEdge(int x){
 	int mi=-1, mv = -INF;
@@ -113,13 +126,14 @@ void solveCycle(int x, int y){
 	int ry = ins[y];
 	int ty = ry;
 	while(ty!=x){
+        vis[ty] = 2;
 		st.insert(ty);
 		ins[ty] = n;
 		ty = par[ty];
 	}
 	ins[x] = n;
 	st.insert(x);
-
+    vis[x] = 2;
 
 	int val, eind;
 	ty = ry;
@@ -132,15 +146,18 @@ void solveCycle(int x, int y){
 
 
 void process(int x){
-	if(x==0) return;
+	if(tcnt>=N) return;
 	vis[x] = 1;
+    if(x<N) tcnt++;
 	pii p = maxEdge(x);
 	int y = p.F;
 	int ed = p.S;
 	best[x] = ed;
+    trace(x, y, ed, vis[y]);
+    // if(x!=3  && x!=4 && x!=6) return;
     if(vis[y]==1){
         solveCycle(x, y);
-		process(n++);
+        process(n++);
 	}else if(vis[y]==2){
         par[x]=y;
         vis[x]=2;
@@ -172,24 +189,27 @@ void make_spanning_tree(){
     printMST();
 }
 
-
-void ordering(){
-    int rt=0;
-
+vi ordervis(MAXN, 0);
+vi rank_node;
+void ordering(int x){
+    trace(x);
+    int rt=x;
+    // if(rt==4) return ;
     priority_queue<pair<int, int> > pq;
-    vi rank_node;
     pq.push({0, rt});
     while(sz(pq)){
         pii p = pq.top();
         pq.pop();
+        if(ordervis[p.S]) continue;
+        ordervis[p.S] = 1;
         rank_node.pb(p.S);
         trav(adj[p.S]){
             pq.push({it.S, it.F});
         }
     }
 
-    printv(rank_node);
 
+    printv(rank_node);
 }
 
 ////////PRINT///////
@@ -234,19 +254,140 @@ void printMST(){
 
 signed main(){
     fast
+    // #ifdef ROBOT
+    //     freopen("/home/yell0wfl4sh/Competitive/input.txt", "r", stdin);
+    //     freopen("/home/yell0wfl4sh/Competitive/output.txt", "w", stdout);
+    // #endif
    //  vvi A{	{ -INF, 5, 1, 1 },
 			// { -INF, -INF, 11, 4 },
 			// { -INF, 10, -INF, 5 },
 			// { -INF, 9, 8, -INF }};
 
-    vvi A{  { -INF, 8, 1, 1},
-            { -INF, -INF, 5, 3},
-            { -INF, 8, -INF, 2},50
-            { -INF, 4, 7, -INF}};
+    // vvi A{  { -INF, 8, 1, 1},
+    //         { -INF, -INF, 5, 3},
+    //         { -INF, 8, -INF, 2},50
+    //         { -INF, 4, 7, -INF}};
 
+    // vvi v{  { -INF, 51, 100, -INF},
+    //         { 49, -INF, 51, 100},
+    //         { 0, 49, -INF, 51},
+    //         { -INF, 0, 49, -INF}};
 
+    // vvi v{  { -INF, 55 , 65  , 70    , 75   ,95 },
+    //         { 45 , -INF, 80  , 75    ,75    ,90 },
+    //         { 35 , 20  , -INF, 75    , 60   ,80 },
+    //         { 30 , 25  , 25  , -INF  , 30   ,45 },
+    //         { 25 , 25  , 40  ,   70  , -INF ,70 },
+    //         { 5  , 10  , 20  , 55    , 30   ,-INF}};
+
+    // vvi v{  { 50 , 75 , 100 , 50  , 50   ,50 },
+    //         { 25 , 50 , 75  , 50  , 50   ,50 },
+    //         { 0  , 25 , 50  , 50  , 50   ,50 },
+    //         { 50 , 50 , 50  , 50  , 75   ,100 },
+    //         { 50 , 50 , 50  , 25  , 50   ,75 },
+    //         { 50 , 50 , 50  , 0   , 25   ,50}};
+
+    // vvi vx{ {0,  2,  11,  12,  6,  6,  13,  2,  7,  12,  6,  0,  0,  0},
+    //         {0,  0,  1,   1,   2,  0,  1,   1,  0,  0,   0,  0,  0,  0},
+    //         {9,  1,  0,   7,   7,  4,  16,  3,  9,  10,  2,  1,  2,  0},
+    //         {8,  1,  14,  0,   9,  8,  10,  2,  9,  10,  3,  3,  0,  1},
+    //         {12, 0,  12, 11,  0,  6,  11,  1,  10, 11,  4,  2,  1,   2},
+    //         {4,  2,  8,   2,   4,  0,  5,   0,  4,  4,   0,  0,  0,  1},
+    //         {8,  3,  5,   10,  9,  5,  0,   2,  6,  10,  4,  1,  1,  1},
+    //         {3,  1,  1,   2,   3,  5,  2,   0,  0,  0,   0,  0,  0,  0},
+    //         {8,  0,  6,   6,   6,  3,  10,  0,  0,  11,  2,  1,  1,  0},
+    //         {7,  0,  6,   7,   5,  2,  12,  0,  6,  0,   4,  2,  1,  0},
+    //         {5,  0,  7,   7,   7,  0,  6,   0,  7,  6,   0,  1,  0,  0},
+    //         {5,  0,  4,   3,   3,  2,  5,   0,  4,  4,   3,  0,  0,  0},
+    //         {2,  0,  0,   1,   1,  0,  0,   0,  1,  1,   1,  1,  0,  0},
+    //         {2,  0,  2,   1,   0,  1,  1,   2,  0,  0,   0,  0,  0,  0}};
+
+    vvi vx  {{0, 2, 11, 12, 6, 6, 13, 2, 7, 12, 6, 0, 0},
+             {2, 0, 3, 2, 2, 1, 2, 3, 0, 0, 0, 0, 0},
+             {9, 1, 0, 7, 7, 4, 16, 3, 9, 10, 2, 1, 2},
+             {8, 2, 14, 0, 9, 8, 10, 2, 9, 10, 3, 3, 0},
+             {12, 2, 12, 11, 0, 6, 11, 1, 10, 11, 4, 2, 1},
+             {4, 3, 8, 2, 4, 0, 5, 0, 4, 4, 0, 0, 0},
+             {8, 4, 5, 10, 9, 5, 0, 2, 6, 10, 4, 1, 1},
+             {3, 1, 1, 2, 3, 5, 2, 0, 0, 0, 0, 0, 0},
+             {8, 0, 6, 6, 6, 3, 10, 0, 0, 11, 2, 1, 1},
+             {7, 0, 6, 7, 5, 2, 12, 0, 6, 0, 4, 2, 1},
+             {5, 0, 7, 7, 7, 0, 6, 0, 7, 6, 0, 1, 0},
+             {5, 0, 4, 3, 3, 2, 5, 0, 4, 4, 3, 0, 0},
+             {2, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 1, 0}};
+
+    vvi v(13, vi(13, 0));
+    // vector<vector<float> > v(14, vector<float>(14, 0));
+    For(i, 0, 13){
+        For(j, 0, 13){
+            if(i==j){
+                v[i][j] = .50;
+            }else{
+                int val = vx[i][j] + vx[j][i];
+                if(val){
+                    v[i][j] = (((float)vx[i][j]/(float)val)*100);
+                }else{
+                    v[i][j] = .50;
+                }
+            }
+        }
+    }
+
+    // print2v(v);
+    
+    cout<<"START->"<<endl;
+    int xxx = v.size();
+    int yyy = v[0].size();
+
+    vvi A(xxx, vi(yyy, 0));
+    for(int i=0; i<xxx; i++){
+        for(int j=0; j<yyy; j++){
+            if(v[i][j] == 50){
+                A[i][j] = -INF;
+            }else{
+                A[i][j] = v[i][j] / abs(50-v[i][j]);
+            }
+        }
+    }
+
+    for(int i=0; i<13; i++){
+        for(int j=0; j<13; j++){
+            if(max(v[i][j], v[j][i])<50){
+                cout<<0<<" ";
+            }else{
+                float vxal = (float)(max(v[i][j], v[j][i])-50)/(float)100;
+                cout<<vxal<<" ";
+            }
+        }
+        cout<<endl;
+    }
+    // return 0;
+
+    // print2v(v);
+    cout<<endl<<endl;
+
+    For(i, 0, sz(A)){
+        For(j, 0, sz(A[i])){
+            if(A[i][j]==-INF){
+                cout<<"-INF"<<" ";
+                continue;
+            }
+            cout<<A[i][j]<<" ";
+        }
+        cout<<endl;
+    }
+
+    cout<<endl<<endl;
     n = sz(A);
     N = n;
+
+    // For(i, 1, n){
+    //     For(j, 0, n){
+    //         if(A[i][j]==-INF) continue;
+    //         A[i][j]
+    //     }
+    // }
+
     m=0;
     For(i, 0, n){
 	    For(j, 0, n){
@@ -258,14 +399,16 @@ signed main(){
    		ins[i]=i;
    	}
 
-   	For(i, 1, N){
+    tcnt=0;
+    process(9);
+   	For(i, 0, N){
    		if(!vis[i])
    			process(i);
    	}
+
     printGraph();
     printBest();
     printKick();
-
     // updateKick();
     // For(i, 0, 6){
     // 	cout<<par[i]<<" ";
@@ -292,8 +435,25 @@ signed main(){
     make_spanning_tree();
 
     cout<<endl<<endl;
-    ordering();
+    // ordering(11);
+    ordering(0);
 
+    // vi rank_node1{11, 13, 10, 4, 12, 7, 3, 0, 2, 8, 5, 6, 9, 1};
+    // vector<vector<float> >  reordered(N, vector<float> (N, 0));
+
+    // For(i, 0, N){
+    //     For(j, 0, N){
+    //         if(A[rank_node1[i]][rank_node1[j]]==-INF){
+    //             reordered[i][j] = 0;
+    //         }else if(A[rank_node1[i]][rank_node1[j]]==0){
+    //             reordered[i][j] = 1;
+    //         }else{
+    //             reordered[i][j] = 1/(float) A[rank_node1[i]][rank_node1[j]];
+    //         }
+    //     }
+    // }
+
+    // print2v(reordered);
 
     // end_routine()
     return 0;
