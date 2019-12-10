@@ -70,91 +70,123 @@ vi dy{0, 1, 0, -1, 1, -1, 1, -1};
 vector<map<int, pii> > incoming(MAXN);
 vi best(MAXN, -1);
 vi par(MAXN, -1);
-vi ins(MAXN, -1);
 vvi kick(MAXN);
 unordered_set<int> st;
 vi vis(MAXN, 0);
 int N, n, m, tcnt;
 vector< vpi > adj(MAXN);
+vpi ord;
+set<int> inchash;
+vi orderofx;
 
-/*
-vector<set<int>> vset(10000);
-void familypriority(int i,set<int> s){
-    vset[i] = s;
-    s.insert(i);
-    for(auto j : adj[i]){
-        familypriority(j,s);
+//DSU
+vi dsuparent(MAXN);
+
+void initiliase(){
+    For(i, 0, MAXN){
+        dsuparent[i] = i;
     }
-    return ;
 }
-*/
+
+int rootx(int x){
+    while(dsuparent[x]!=x){
+        dsuparent[x] = dsuparent[dsuparent[x]];
+        x = dsuparent[x];
+    }
+    return x;
+}
 
 
+void unionx(int x, int y){
+    int rx = rootx(x);
+    int ry = rootx(y);
+    dsuparent[rx] = ry;
+}
+
+///
 pii maxEdge(int x){
 	int mi=-1, mv = -INF;
 	int ei = -1;
 	trav(incoming[x]){
-		if(it.S.F > mv){
+		if(rootx(it.F)!=x && it.S.F > mv){
 			mi = it.F;
 			ei = it.S.S;
 			mv = it.S.F;
 		}
 	}
-	return {mi, ei};
+	return {rootx(mi), ei};
 }
 
 
-void fillInc(int x, int y){
-	int eind = incoming[x][y].S;
-	int val = incoming[x][y].F;
-	trav(incoming[x]){
-		if(present(st, it.F)) continue;
-		if(present(incoming[n], it.F)){
-			if(incoming[n][it.F].F < it.S.F-val){
-				incoming[n][it.F] = {it.S.F-val, it.S.S};
-			} 
-		}else{
-			incoming[n][it.F] = {it.S.F-val, it.S.S};
-		}
-		kick[it.S.S].pb(eind);
-	}
+void fillInc(int x, int oy){
+    For(i, 0, n){
+        if(rootx(i)==oy){          
+            int y = i;  
+            if(!present(incoming[x], y)) continue;
+        	int eind = incoming[x][y].S;
+        	int val = incoming[x][y].F;
+            if(n==14){
+                trace(x, y, eind, val);
+            }
+        	trav(incoming[x]){
+        		if(present(st, rootx(it.F))){
+                    continue;
+        		}
+                if(present(incoming[n], it.F)){
+        			if(incoming[n][it.F].F < it.S.F-val){
+        				incoming[n][it.F] = {it.S.F-val, it.S.S};
+        			} 
+        		}else{
+        			incoming[n][it.F] = {it.S.F-val, it.S.S};
+        		}
+        		kick[it.S.S].pb(eind);
+        	}
+        }
+    }
 }
 
 
 
 void solveCycle(int x, int y){
-	int ry = ins[y];
+	int ry = rootx(y);
 	int ty = ry;
+    st.clear();
 	while(ty!=x){
         vis[ty] = 2;
 		st.insert(ty);
-		ins[ty] = n;
-		ty = par[ty];
+		ty = rootx(par[ty]);
 	}
-	ins[x] = n;
 	st.insert(x);
     vis[x] = 2;
-
 	int val, eind;
 	ty = ry;
 	while(ty!=x){
-		fillInc(ty, par[ty]);
-		ty = par[ty];
+        if(n==14) trace(ty, rootx(par[ty]));
+		fillInc(ty, rootx(par[ty]));
+		ty = rootx(par[ty]);
 	}
-	fillInc(x, y);
+	fillInc(x, ry);
+    ty = ry;
+    while(ty!=x){
+        unionx(ty, n);
+        vis[ty] = 2;
+        ty = rootx(par[ty]);
+    }
+    unionx(x, n);
 }
 
 
 void process(int x){
-	if(tcnt>=N) return;
+	if(sz(inchash)>=N) return;
+    orderofx.pb(x);
 	vis[x] = 1;
-    if(x<N) tcnt++;
 	pii p = maxEdge(x);
 	int y = p.F;
+    if(y<N) inchash.insert(y);
 	int ed = p.S;
 	best[x] = ed;
-    trace(x, y, ed, vis[y]);
-    // if(x!=3  && x!=4 && x!=6) return;
+    trace(x, y, ed, vis[y], sz(inchash));
+    // if(x!=11 && x!=4 && x!=3 && x!=13 && x!=6 && x!=14) return;
     if(vis[y]==1){
         solveCycle(x, y);
         process(n++);
@@ -172,15 +204,15 @@ void process(int x){
 void printMST();
 
 void make_spanning_tree(){
-    unordered_set<int> st;
-    For(i, 1, N){
-        st.insert(best[i]);
+    unordered_set<int> st1;
+    For(i, 0, N){
+        st1.insert(best[i]);
     }
 
     // Make directed MST
     For(i, 0, N){
         trav(incoming[i]){
-            if(present(st, it.S.S)){
+            if(present(st1, it.S.S)){
                 adj[it.F].pb({i, it.S.F});
             }
         }
@@ -224,8 +256,8 @@ void printGraph(){
 }
 
 void printBest(){
-	For(i, 0, n){
-		cout<<best[i]<<endl;
+	rFor(i, sz(orderofx)-1, 0){
+		cout<<orderofx[i]<<" "<<best[orderofx[i]]<<endl;
 	}
 	cout<<endl;
 }
@@ -302,6 +334,8 @@ signed main(){
     //         {2,  0,  0,   1,   1,  0,  0,   0,  1,  1,   1,  1,  0,  0},
     //         {2,  0,  2,   1,   0,  1,  1,   2,  0,  0,   0,  0,  0,  0}};
 
+
+    //i loses to j
     vvi vx  {{0, 2, 11, 12, 6, 6, 13, 2, 7, 12, 6, 0, 0},
              {2, 0, 3, 2, 2, 1, 2, 3, 0, 0, 0, 0, 0},
              {9, 1, 0, 7, 7, 4, 16, 3, 9, 10, 2, 1, 2},
@@ -315,6 +349,16 @@ signed main(){
              {5, 0, 7, 7, 7, 0, 6, 0, 7, 6, 0, 1, 0},
              {5, 0, 4, 3, 3, 2, 5, 0, 4, 4, 3, 0, 0},
              {2, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 1, 0}};
+    
+    For(i, 0, 13){
+        For(j, i+1, 13){
+            int temp = vx[j][i];
+            vx[j][i] = vx[i][j];
+            vx[i][j] = temp;
+        }
+    }
+
+    print2v(vx);
 
     vvi v(13, vi(13, 0));
     // vector<vector<float> > v(14, vector<float>(14, 0));
@@ -350,21 +394,21 @@ signed main(){
         }
     }
 
-    for(int i=0; i<13; i++){
-        for(int j=0; j<13; j++){
-            if(max(v[i][j], v[j][i])<50){
-                cout<<0<<" ";
-            }else{
-                float vxal = (float)(max(v[i][j], v[j][i])-50)/(float)100;
-                cout<<vxal<<" ";
-            }
-        }
-        cout<<endl;
-    }
+    // for(int i=0; i<13; i++){
+    //     for(int j=0; j<13; j++){
+    //         if(max(v[i][j], v[j][i])<50){
+    //             // cout<<0<<" ";
+    //         }else{
+    //             float vxal = (float)(max(v[i][j], v[j][i])-50)/(float)100;
+    //             cout<<vxal<<" ";
+    //         }
+    //     }
+    //     cout<<endl;
+    // }
     // return 0;
 
     // print2v(v);
-    cout<<endl<<endl;
+    // cout<<endl<<endl;
 
     For(i, 0, sz(A)){
         For(j, 0, sz(A[i])){
@@ -381,13 +425,6 @@ signed main(){
     n = sz(A);
     N = n;
 
-    // For(i, 1, n){
-    //     For(j, 0, n){
-    //         if(A[i][j]==-INF) continue;
-    //         A[i][j]
-    //     }
-    // }
-
     m=0;
     For(i, 0, n){
 	    For(j, 0, n){
@@ -395,33 +432,43 @@ signed main(){
     		incoming[j][i] = {A[i][j], m++};
     	}
     }
-   	For(i, 0, m){
-   		ins[i]=i;
-   	}
+
+    // Make root to start process
+    for(int i=0; i<n; i++){
+        int cnt=0;
+        for(int j=0; j<n; j++){
+            if(v[i][j]>v[j][i]) cnt++;
+        }
+        ord.pb({cnt, i});
+    }
+    sort(all(ord));
+    // 
+
+    initiliase();
 
     tcnt=0;
-    process(9);
-   	For(i, 0, N){
-   		if(!vis[i])
-   			process(i);
+   	for(auto it: ord){
+        // cout<<it.F<<" "<<it.S<<endl;
+   		if(!vis[it.S]){
+            trace(it.S);
+   			process(it.S);
+            break;
+        }
    	}
+    // return 0;
 
-    printGraph();
+
+    // printGraph();
     printBest();
-    printKick();
-    // updateKick();
+    // printKick();
     // For(i, 0, 6){
     // 	cout<<par[i]<<" ";
     // }
     // cout<<endl;
 
-    // For(i, 0, m){
-    // 	cout<<ins[i]<<" ";
-    // }
-    // cout<<endl;
-
-    rFor(i, n-1, 1){
-    	trav(kick[best[i]]){
+    rFor(ix, sz(orderofx)-1, 0){
+    	int i = orderofx[ix];
+        trav(kick[best[i]]){
     		For(j, 0, n){
     			if(best[j]==it){
     				best[j] = best[i];
@@ -436,22 +483,33 @@ signed main(){
 
     cout<<endl<<endl;
     // ordering(11);
-    ordering(0);
+    ordering(12);
+    cout<<endl<<endl;
 
-    // vi rank_node1{11, 13, 10, 4, 12, 7, 3, 0, 2, 8, 5, 6, 9, 1};
-    // vector<vector<float> >  reordered(N, vector<float> (N, 0));
+    vi rank_node1{11, 10, 4, 12, 7, 3, 0, 1, 2, 8, 5, 6, 9};
+    vector<vector<float> >  reordered(N, vector<float> (N, 0));
+    rank_node.clear();
+    rank_node = rank_node1;
 
-    // For(i, 0, N){
-    //     For(j, 0, N){
-    //         if(A[rank_node1[i]][rank_node1[j]]==-INF){
-    //             reordered[i][j] = 0;
-    //         }else if(A[rank_node1[i]][rank_node1[j]]==0){
-    //             reordered[i][j] = 1;
-    //         }else{
-    //             reordered[i][j] = 1/(float) A[rank_node1[i]][rank_node1[j]];
-    //         }
-    //     }
-    // }
+    For(i, 0, N){
+        For(j, 0, N){
+            if(i==j){
+                cout<<0<<" ";
+                continue;
+            }
+            if(A[rank_node[i]][rank_node[j]]==-INF){
+                reordered[i][j] = 0;
+                cout<<0<<" ";
+            }else if(A[rank_node[i]][rank_node[j]]==0){
+                reordered[i][j] = 1;
+                cout<<1<<" ";
+            }else{
+                reordered[i][j] = A[rank_node[i]][rank_node[j]];
+                cout<<"1/"<<reordered[i][j]<<" ";
+            }
+        }
+        cout<<";"<<endl;
+    }
 
     // print2v(reordered);
 
